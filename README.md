@@ -39,7 +39,7 @@
     2. Добавьте Secrets* на https://github.com/ в репазитории проекта
     2. Раскомментируйте файл #main.yml 
     3. Выполните команду git add .
-    4. git commit -a -m 'коментарий'
+    4. git commit -m 'коментарий'
     5. git push 
     ```
 ### Настройка CI/CD
