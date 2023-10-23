@@ -18,9 +18,8 @@ services:
   backend:
     container_name: foodgram_backend
     image: ilyayandex/foodgram_backend:latest
-    restart: always
     volumes:
-      - static_dir:/app/static/
+      - static_dir:/backend_static/
       - media_dir:/app/media/
     env_file:
       - ../.env

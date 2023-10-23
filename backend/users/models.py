@@ -23,7 +23,7 @@ class Users(AbstractUser):
     )
     password = models.CharField(
         verbose_name="Пароль",
-        max_length=30,
+        max_length=255,
     )
     is_active = models.BooleanField(
         verbose_name="Активация",
