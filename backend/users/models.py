@@ -8,11 +8,6 @@ class Users(AbstractUser):
         max_length=200,
         unique=True,
     )
-    username = models.CharField(
-        verbose_name="Логин",
-        max_length=200,
-        unique=True,
-    )
     last_name = models.CharField(
         verbose_name="Фамилия",
         max_length=30,
@@ -21,14 +16,12 @@ class Users(AbstractUser):
         verbose_name="Имя",
         max_length=30,
     )
-    password = models.CharField(
-        verbose_name="Пароль",
-        max_length=255,
-    )
     is_active = models.BooleanField(
         verbose_name="Активация",
         default=True,
     )  
+
+    USERNAME_FIELD = 'email'
 
     class Meta:
         verbose_name = 'Пользователь'

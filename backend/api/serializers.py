@@ -136,11 +136,12 @@ class RecipeReadSerializer(ModelSerializer):
 
     def get_ingredients(self, recipe):
         """Получить все ингредиенты для данного рецецпта."""
-        return recipe.ingredients.values(
-            'id',
-            'name',
-            'measurement_unit',
-            amount=F('ingredients_in_recipes__amount')
+        ingredients = CountIngredient.objects.filter(recipe=recipe)
+        return ingredients.values(
+            'amount',
+            name=F('ingredient__name'),
+            measurement_unit=F('ingredient__measurement_unit'),
+            
         )
     
     def get_is_favorited(self, recipe):
@@ -174,7 +175,7 @@ class RecipeCreateSerializer(ModelSerializer):
         many=True,
         queryset=Tags.objects.all()
         )
-    ingredients = SerializerMethodField(method_name='get_ingredients')
+    ingredients = SerializerMethodField()
     image = Base64ImageField()
 
 
@@ -184,6 +185,16 @@ class RecipeCreateSerializer(ModelSerializer):
             'tags', 'ingredients',
             'image', 'text', 
             'name', 'cooking_time'
+        )
+
+    def get_ingredients(self, recipe):
+        """Получить все ингредиенты для данного рецецпта."""
+        ingredients = CountIngredient.objects.filter(recipe=recipe)
+        return ingredients.values(
+            'ingredient_id',
+            'ingredient__name',
+            'ingredient__measurement_unit',
+            'amount'
         )
 
     def validate_tags(self, tags):
@@ -240,10 +251,12 @@ class RecipeCreateSerializer(ModelSerializer):
             **validated_data
         )
         recipe.tags.set(tags)
-        for ingredient, amount in ingredients.values():
+        for ingredient in ingredients:
+            ingredient_id = ingredient['id']
+            amount = ingredient['amount']
             CountIngredient.objects.create(
                 recipe=recipe,
-                ingredient=ingredient,
+                ingredient_id=ingredient_id,
                 amount=amount
             )
         return recipe
