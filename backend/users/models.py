@@ -35,7 +35,7 @@ class Users(AbstractUser):
         verbose_name_plural = 'Пользователи'
 
     def __str__(self):
-        return self.user.username
+        return self.username
 
 
 class Subscribers(models.Model):
@@ -58,4 +58,4 @@ class Subscribers(models.Model):
         verbose_name_plural = 'Подписки'
     
     def __str__(self):
-        return self.username
+        return self.user.username
