@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from django.db import transaction
 from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
-from rest_framework.fields import IntegerField, SerializerMethodField
+from rest_framework.fields import SerializerMethodField
 from recipes.models import Ingredients, Recipes, Tags, CountIngredient
 from users.models import Subscribers
 from django.db.models import F
@@ -38,6 +38,7 @@ class UserSerializer(ModelSerializer):
 
         return user.subscriptions.filter(author=obj).exists()
 
+
 class RecipeInfoSerializer(ModelSerializer):
     """Информация о рецепте."""
 
@@ -60,7 +61,7 @@ class SubscribeSerializer(UserSerializer):
             "username",
             "first_name",
             "last_name",
-            "recipes_count", 
+            "recipes_count",
             "recipes",
             "is_subscribed",
         )
@@ -80,7 +81,7 @@ class SubscribeSerializer(UserSerializer):
                 code=status.HTTP_400_BAD_REQUEST
             )
         return data
- 
+
     def get_recipes_count(self, obj):
         """Количество рецептов каждго автора."""
         return obj.recipes.count()
@@ -93,7 +94,6 @@ class SubscribeSerializer(UserSerializer):
             return False
 
         return user.subscriptions.filter(author=obj).exists()
-    
 
 
 class IngredientSerializer(ModelSerializer):
@@ -121,7 +121,6 @@ class RecipeReadSerializer(ModelSerializer):
     is_in_shopping_cart = SerializerMethodField()
     image = Base64ImageField()
 
-
     class Meta:
         model = Recipes
         fields = (
@@ -130,7 +129,7 @@ class RecipeReadSerializer(ModelSerializer):
             'author',
             'is_favorited',
             'is_in_shopping_cart',
-            'image', 'text', 
+            'image', 'text',
             'name', 'cooking_time'
         )
 
@@ -141,9 +140,8 @@ class RecipeReadSerializer(ModelSerializer):
             'amount',
             name=F('ingredient__name'),
             measurement_unit=F('ingredient__measurement_unit'),
-            
         )
-    
+
     def get_is_favorited(self, recipe):
         """Проверить наличие рецепта в избранном"""
         user = self.context.get("view").request.user
@@ -152,7 +150,7 @@ class RecipeReadSerializer(ModelSerializer):
             return False
 
         return user.favorites.filter(recipe=recipe).exists()
-    
+
     def get_is_in_shopping_cart(self, recipe):
         """проверить наличие рецепта в корзине"""
         user = self.context.get("view").request.user
@@ -178,12 +176,11 @@ class RecipeCreateSerializer(ModelSerializer):
     ingredients = SerializerMethodField()
     image = Base64ImageField()
 
-
     class Meta:
         model = Recipes
         fields = (
             'tags', 'ingredients',
-            'image', 'text', 
+            'image', 'text',
             'name', 'cooking_time'
         )
 
@@ -198,7 +195,7 @@ class RecipeCreateSerializer(ModelSerializer):
         )
 
     def validate_tags(self, tags):
-        if len(tags)==0:
+        if len(tags) == 0:
             raise ValidationError(
                 detail='Дожен быть хотя бы один тег!',
                 status=status.HTTP_400_BAD_REQUEST
@@ -221,9 +218,9 @@ class RecipeCreateSerializer(ModelSerializer):
             }
         )
         return data
-    
+
     def validate_ingredients(self, ingredients):
-        if len(ingredients)==0:
+        if len(ingredients) == 0:
             raise ValidationError(
                 detail='Дожен быть хотя бы один ингредиент!',
                 status=status.HTTP_400_BAD_REQUEST
@@ -234,7 +231,7 @@ class RecipeCreateSerializer(ModelSerializer):
                 detail='Ингредиенты не должны повторяться!',
                 status=status.HTTP_400_BAD_REQUEST
             )
-        if len([item['amount'] for item in ingredients if int(item['amount']) <= 0]) > 0:
+        if len(['*' for item in ingredients if int(item['amount']) <= 0]) > 0:
             raise ValidationError(
                 detail='Должно быть хотя бы какое-то количество ингредиента!',
                 status=status.HTTP_400_BAD_REQUEST
@@ -260,7 +257,7 @@ class RecipeCreateSerializer(ModelSerializer):
                 amount=amount
             )
         return recipe
-  
+
     @transaction.atomic
     def update(self, instance, validated_data):
         """Обновление рецепта."""
@@ -280,14 +277,3 @@ class RecipeCreateSerializer(ModelSerializer):
                 )
         instance.save()
         return instance
-
-
-
-
-
-
-
-
-
-
-    

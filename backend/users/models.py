@@ -1,6 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
+
 class Users(AbstractUser):
     """Модель для пользователей"""
     email = models.EmailField(
@@ -18,8 +19,7 @@ class Users(AbstractUser):
     )
     is_active = models.BooleanField(
         verbose_name="Активация",
-        default=True,
-    )  
+        default=True,)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ('username', 'first_name', 'last_name')
@@ -50,6 +50,6 @@ class Subscribers(models.Model):
     class Meta:
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
-    
+
     def __str__(self):
         return self.user.username

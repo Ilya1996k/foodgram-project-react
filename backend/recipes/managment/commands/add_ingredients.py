@@ -11,8 +11,5 @@ class Command(BaseCommand):
         with open('data/ingredients.csv', 'r', encoding='utf-8') as file:
             reader = csv.reader(file)
             for row in reader:
-                Ingredients.objects.create(name=row[0], measurement_unit=row[1])
-        
-
-
-        
+                Ingredients.objects.create(name=row[0],
+                                           measurement_unit=row[1])

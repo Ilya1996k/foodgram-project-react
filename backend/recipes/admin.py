@@ -6,8 +6,8 @@ from .models import (Tags,
                      Recipes,
                      Carts,
                      Favourites,
-                     CountIngredient
-)
+                     CountIngredient)
+
 
 @admin.register(Tags)
 class TagAdmin(admin.ModelAdmin):
@@ -24,7 +24,7 @@ class IngredientAdmin(admin.ModelAdmin):
 class RecipeAdmin(admin.ModelAdmin):
     list_display = ('author', 'name', 'count_favorites')
     list_filter = ('author', 'name', 'tags',)
-    
+
     @display(description='Количество в избранных')
     def count_favorites(self, obj):
         return obj.favorites.count()
