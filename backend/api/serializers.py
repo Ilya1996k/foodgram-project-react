@@ -37,11 +37,20 @@ class UserSerializer(ModelSerializer):
             return False
 
         return user.subscriptions.filter(author=obj).exists()
-    
+
+class RecipeInfoSerializer(ModelSerializer):
+    """Информация о рецепте."""
+
+    class Meta:
+        model = Recipes
+        fields = ("id", "name", "image", "cooking_time")
+        read_only_fields = ("__all__",)
+
+
 class SubscribeSerializer(UserSerializer):
     """Вывод подписок пользователя."""
     recipes_count = SerializerMethodField()
-    # recipes = SerializerMethodField()
+    recipes = RecipeInfoSerializer(many=True, read_only=True)
 
     class Meta:
         model = User
@@ -52,8 +61,11 @@ class SubscribeSerializer(UserSerializer):
             "first_name",
             "last_name",
             "recipes_count", 
-            # "recipes",
+            "recipes",
+            "is_subscribed",
         )
+        read_only_fields = ("__all__",)
+
     def validate(self, data):
         author = self.instance
         user = self.context.get('request').user
@@ -72,6 +84,15 @@ class SubscribeSerializer(UserSerializer):
     def get_recipes_count(self, obj):
         """Количество рецептов каждго автора."""
         return obj.recipes.count()
+
+    def get_is_subscribed(self, obj):
+        """Проверка подписки пользователей."""
+        user = self.context.get("request").user
+
+        if user.is_anonymous or (user == obj):
+            return False
+
+        return user.subscriptions.filter(author=obj).exists()
     
 
 
@@ -153,7 +174,7 @@ class RecipeCreateSerializer(ModelSerializer):
         many=True,
         queryset=Tags.objects.all()
         )
-    ingredients = SerializerMethodField()
+    ingredients = SerializerMethodField(method_name='get_ingredients')
     image = Base64ImageField()
 
 
@@ -177,6 +198,18 @@ class RecipeCreateSerializer(ModelSerializer):
                 status=status.HTTP_400_BAD_REQUEST
             )
         return tags
+
+    def validate(self, data):
+        """Валидация исходных данных."""
+        ingredients = self.initial_data.get("ingredients")
+        ingredients = self.validate_ingredients(ingredients)
+
+        data.update(
+            {
+                "ingredients": ingredients
+            }
+        )
+        return data
     
     def validate_ingredients(self, ingredients):
         if len(ingredients)==0:

@@ -56,21 +56,24 @@ class IngredientViewSet(ReadOnlyModelViewSet):
     queryset = Ingredients.objects.all()
     serializer_class = IngredientSerializer
     permission_classes = (AdminOrReadOnly,)
+    filter_backends = (filters.DjangoFilterBackend, )
+    filterset_class = IngredientsFilter
+
 
 
 class UserViewSet(DjoserUserViewSet):
     """Класс для пользователей."""
     queryset = Users.objects.all()
-    # pagination_class = LimitPagination
+    pagination_class = LimitPagination
     serializer_class = UserSerializer
 
     @action(detail=False, methods=['GET'], permission_classes=(IsAuthenticated, ))
-    def subscriptions(self, request) -> Response:
-        """Получает список подписок пользователя."""
+    def subscriptions(self, request):
+        """Cписок подписок."""
         pages = self.paginate_queryset(
             User.objects.filter(subscribers__user=request.user)
         )
-        serializer = SubscribeSerializer(pages, many=True)
+        serializer = SubscribeSerializer(pages, many=True, context={'request': request})
         return self.get_paginated_response(serializer.data)
         # return Response(serializer.data)
     

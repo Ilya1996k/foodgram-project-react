@@ -57,7 +57,7 @@ class Recipes(models.Model):
         verbose_name='Теги'
     )
     cooking_time = models.PositiveSmallIntegerField('Время приготовления')
-    date = models.DateTimeField('Дата публикации')
+    date = models.DateTimeField('Дата публикации', auto_now_add=True)
 
     class Meta:
         verbose_name = 'Рецепт'
