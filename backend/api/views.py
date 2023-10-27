@@ -71,8 +71,8 @@ class UserViewSet(DjoserUserViewSet):
             User.objects.filter(subscribers__user=request.user)
         )
         serializer = SubscribeSerializer(pages, many=True)
-        # return self.get_paginated_response(serializer.data)
-        return Response(serializer.data)
+        return self.get_paginated_response(serializer.data)
+        # return Response(serializer.data)
     
     @action(detail=True, methods=['POST'])
     def subscribe(self, request):
@@ -151,7 +151,8 @@ class RecipeViewSet(ModelViewSet):
             sum=Sum('amount')
         )
         with open('cart.txt', 'w') as file:
-            file.write('Shopping cart\n')
+            file.write(f'Список покупок \n')
+            
             for i, ingredient in enumerate(ingredients):
                 file.write(f'Ингредиент №{i+1}: ' +
                            f'{ingredient["ingredient__name"]}  ' +

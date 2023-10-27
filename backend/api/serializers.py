@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.db import transaction
 from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
 from rest_framework.fields import IntegerField, SerializerMethodField
@@ -164,9 +165,7 @@ class RecipeCreateSerializer(ModelSerializer):
             'name', 'cooking_time'
         )
 
- 
-    def validate_tags(self, values):
-        tags = values
+    def validate_tags(self, tags):
         if len(tags)==0:
             raise ValidationError(
                 detail='Дожен быть хотя бы один тег!',
@@ -177,10 +176,9 @@ class RecipeCreateSerializer(ModelSerializer):
                 detail='Все теги должны быть уникальными!',
                 status=status.HTTP_400_BAD_REQUEST
             )
-        return values
+        return tags
     
-    def validate_ingredients(self, values):
-        ingredients = values
+    def validate_ingredients(self, ingredients):
         if len(ingredients)==0:
             raise ValidationError(
                 detail='Дожен быть хотя бы один ингредиент!',
@@ -197,8 +195,9 @@ class RecipeCreateSerializer(ModelSerializer):
                 detail='Должно быть хотя бы какое-то количество ингредиента!',
                 status=status.HTTP_400_BAD_REQUEST
             )
-        return values
-    
+        return ingredients
+
+    @transaction.atomic
     def create(self, validated_data):
         """Создание рецепта."""
         tags = validated_data.pop('tags')
@@ -208,7 +207,6 @@ class RecipeCreateSerializer(ModelSerializer):
             **validated_data
         )
         recipe.tags.set(tags)
-        print(ingredients)
         for ingredient, amount in ingredients.values():
             CountIngredient.objects.create(
                 recipe=recipe,
@@ -216,7 +214,8 @@ class RecipeCreateSerializer(ModelSerializer):
                 amount=amount
             )
         return recipe
-    
+  
+    @transaction.atomic
     def update(self, instance, validated_data):
         """Обновление рецепта."""
         tags = validated_data.pop('tags')
