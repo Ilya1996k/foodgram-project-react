@@ -93,8 +93,7 @@ class Carts(models.Model):
 
     def __str__(self):
         return (
-            f'Рецепт {self.recipe.name} добавлен в корзину' +
-            f' пользователя {self.user.username}'
+            f'{self.recipe.name} --> {self.user.username}'
         )
 
 
@@ -118,8 +117,7 @@ class Favourites(models.Model):
         verbose_name = 'Избранное'
 
     def __str__(self):
-        return (f'Рецепт {self.recipe.name} добавлен в избранное' +
-                f'  пользователя {self.user.username}') # noqa W504
+        return (f'{self.recipe.name} --> {self.user.username}')
 
 
 class CountIngredient(models.Model):
