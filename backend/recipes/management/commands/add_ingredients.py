@@ -6,7 +6,7 @@ from recipes.models import Ingredients
 
 
 class Command(BaseCommand):
-    help = ""
+    help = "add_ingredients"
 
     def handle(self, *args, **options):
         Ingredients.objects.all().delete()
