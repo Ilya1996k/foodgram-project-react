@@ -7,7 +7,7 @@ class AdminOrReadOnly(BasePermission):
         return (request.method in SAFE_METHODS
                 or (request.user.is_active and
                     request.user.is_authenticated and
-                    request.user.is_staff))
+                    request.user.is_staff)) #noqa W504
 
 
 class AuthorOrReadOnly(BasePermission):

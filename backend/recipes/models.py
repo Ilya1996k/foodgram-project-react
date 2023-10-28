@@ -93,7 +93,7 @@ class Carts(models.Model):
 
     def __str__(self):
         return (f'Рецепт {self.recipe.name} добавлен в корзину' +
-                f' пользователя {self.user.username}')
+                f' пользователя {self.user.username}') # noqa W504
 
 
 class Favourites(models.Model):
@@ -117,7 +117,7 @@ class Favourites(models.Model):
 
     def __str__(self):
         return (f'Рецепт {self.recipe.name} добавлен в избранное' +
-                f'  пользователя {self.user.username}')
+                f'  пользователя {self.user.username}') # noqa W504
 
 
 class CountIngredient(models.Model):

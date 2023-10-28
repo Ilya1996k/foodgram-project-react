@@ -172,7 +172,7 @@ class RecipeCreateSerializer(ModelSerializer):
     tags = serializers.PrimaryKeyRelatedField(
         many=True,
         queryset=Tags.objects.all()
-        )
+        ) # noqa E123
     ingredients = SerializerMethodField()
     image = Base64ImageField()
 

@@ -151,6 +151,6 @@ class RecipeViewSet(ModelViewSet):
                 file.write(f'Ингредиент №{i+1}: ' +
                            f'{ingredient["ingredient__name"]}  ' +
                            f'{ingredient["sum"]}' +
-                           f'{ingredient["ingredient__measurement_unit"]}.\n')
+                           f'{ingredient["ingredient__measurement_unit"]}.\n') #noqa W504
         print(open('cart.txt').read)
         return FileResponse(open('cart.txt', 'rb'), as_attachment=True)
