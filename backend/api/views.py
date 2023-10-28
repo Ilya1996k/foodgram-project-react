@@ -1,40 +1,26 @@
 from django.contrib.auth import get_user_model
 from django.db.models import Sum
 from django.http import FileResponse
-from django_filters import rest_framework as filters
 from django.shortcuts import get_object_or_404
+from django_filters import rest_framework as filters
 from djoser.views import UserViewSet as DjoserUserViewSet
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.status import (HTTP_400_BAD_REQUEST,
-                                   HTTP_201_CREATED,
-                                   HTTP_204_NO_CONTENT)
+from rest_framework.status import (HTTP_201_CREATED, HTTP_204_NO_CONTENT,
+                                   HTTP_400_BAD_REQUEST)
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
+from api.filters import IngredientsFilter, RecipesFilter
 from api.paginators import LimitPagination
 from api.permissions import AdminOrReadOnly, AuthorOrReadOnly
-from api.serializers import (IngredientSerializer,
-                             RecipeReadSerializer,
-                             RecipeCreateSerializer,
-                             TagSerializer,
-                             UserSerializer,
-                             SubscribeSerializer,
-                             RecipeShortSerializer
-                             )
-from recipes.models import (Carts,
-                            Tags,
-                            Ingredients,
-                            Recipes,
-                            CountIngredient,
-                            Favourites,
-                            )
-from users.models import (Users,
-                          Subscribers,
-                          )
-from api.filters import (IngredientsFilter,
-                         RecipesFilter,
-                         )
+from api.serializers import (IngredientSerializer, RecipeCreateSerializer,
+                             RecipeReadSerializer, RecipeShortSerializer,
+                             SubscribeSerializer, TagSerializer,
+                             UserSerializer)
+from recipes.models import (Carts, CountIngredient, Favourites, Ingredients,
+                            Recipes, Tags)
+from users.models import Subscribers, Users
 
 User = get_user_model()
 
@@ -76,16 +62,16 @@ class UserViewSet(DjoserUserViewSet):
         return self.get_paginated_response(serializer.data)
         # return Response(serializer.data)
 
-    @action(detail=True, methods=['POST'])
-    def subscribe(self, request):
+    @action(detail=True, methods=['POST'], url_path='subscribe')
+    def subscribe_post(self, request):
         Subscribers.objects.create(
             user=request.user,
             author=self.get_object()
         )
         return Response(status=HTTP_201_CREATED)
 
-    @action(detail=True, methods=['DELETE'])
-    def subscribe(self, request):
+    @action(detail=True, methods=['DELETE'], url_path='subscribe')
+    def subscribe_delete(self, request):
         subscription = Subscribers.objects.get(
             user=request.user,
             author=self.get_object()
