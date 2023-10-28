@@ -30,7 +30,6 @@ services:
 
 
 
-
   nginx:
     container_name: gateway
     image: nginx:1.19.3
