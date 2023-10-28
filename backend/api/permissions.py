@@ -5,9 +5,11 @@ class AdminOrReadOnly(BasePermission):
     """Разрешение админу. Остальным только чтение."""
     def has_permission(self, request, view):
         return (request.method in SAFE_METHODS
-                or (request.user.is_active and
+                or (
+                    request.user.is_active and
                     request.user.is_authenticated and
-                    request.user.is_staff)) #noqa W504
+                    request.user.is_staff
+                ))
 
 
 class AuthorOrReadOnly(BasePermission):

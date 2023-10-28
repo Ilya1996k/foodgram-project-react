@@ -148,9 +148,11 @@ class RecipeViewSet(ModelViewSet):
         with open('cart.txt', 'w') as file:
             file.write('Список покупок \n')
             for i, ingredient in enumerate(ingredients):
-                file.write(f'Ингредиент №{i+1}: ' +
+                file.write(
+                           f'Ингредиент №{i+1}: ' +
                            f'{ingredient["ingredient__name"]}  ' +
                            f'{ingredient["sum"]}' +
-                           f'{ingredient["ingredient__measurement_unit"]}.\n') #noqa W504
+                           f'{ingredient["ingredient__measurement_unit"]}.\n'
+                )
         print(open('cart.txt').read)
         return FileResponse(open('cart.txt', 'rb'), as_attachment=True)
