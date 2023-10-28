@@ -92,8 +92,10 @@ class Carts(models.Model):
         verbose_name_plural = 'Корзины'
 
     def __str__(self):
-        return (f'Рецепт {self.recipe.name} добавлен в корзину' +
-                f' пользователя {self.user.username}') # noqa W504
+        return (
+                f'Рецепт {self.recipe.name} добавлен в корзину' +
+                f' пользователя {self.user.username}'
+        )
 
 
 class Favourites(models.Model):
