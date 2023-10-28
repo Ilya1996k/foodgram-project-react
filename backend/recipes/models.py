@@ -93,8 +93,8 @@ class Carts(models.Model):
 
     def __str__(self):
         return (
-                f'Рецепт {self.recipe.name} добавлен в корзину' +
-                f' пользователя {self.user.username}'
+            f'Рецепт {self.recipe.name} добавлен в корзину' +
+            f' пользователя {self.user.username}'
         )
 
 
