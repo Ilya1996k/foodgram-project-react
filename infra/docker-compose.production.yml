@@ -4,7 +4,6 @@ volumes:
   postgres_data:
   static_dir:
   media_dir:
-  
 
 services:
   db:
