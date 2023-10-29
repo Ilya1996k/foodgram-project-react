@@ -6,14 +6,14 @@ User = get_user_model()
 
 class Tags(models.Model):
     """Модель тегов."""
-    name = models.CharField('Название', max_length=50)
-    color = models.CharField('Цвет', max_length=20)
-    slug = models.CharField("Слаг тега", max_length=100)
+    name = models.CharField('Название', max_length=200)
+    color = models.CharField('Цвет', max_length=7)
+    slug = models.CharField('Слаг тега', max_length=200)
 
     class Meta:
-        verbose_name = "Тег"
-        verbose_name_plural = "Теги"
-        ordering = ("name",)
+        verbose_name = 'Тег'
+        verbose_name_plural = 'Теги'
+        ordering = ('name',)
 
     def __str__(self):
         return f'Название тега: {self.name}'
@@ -22,7 +22,7 @@ class Tags(models.Model):
 class Ingredients(models.Model):
     """Модель ингредиентов."""
     name = models.CharField('Название', max_length=200)
-    measurement_unit = models.CharField('Единица измерения', max_length=20)
+    measurement_unit = models.CharField('Единица измерения', max_length=200)
 
     class Meta:
         verbose_name = 'Ингредиент'
@@ -42,13 +42,13 @@ class Recipes(models.Model):
         null=True,
         verbose_name='Автор',
     )
-    name = models.CharField('Название', max_length=50)
+    name = models.CharField('Название', max_length=200)
     image = models.ImageField('Картинка',
                               blank=True,
                               null=True,
-                              upload_to="recipes/")
-    # image = models.ImageField('Картинка', upload_to="recipes/")
-    text = models.CharField('Текстовое описание', max_length=1000)
+                              upload_to='recipes/')
+    # image = models.ImageField('Картинка', upload_to='recipes/')
+    text = models.TextField('Текстовое описание')
     ingredients = models.ManyToManyField(
         Ingredients,
         verbose_name='Ингредиенты',
@@ -121,7 +121,7 @@ class Favourites(models.Model):
 
 
 class CountIngredient(models.Model):
-    """ Модель для количества ингредиентов в рецепте """
+    ''' Модель для количества ингредиентов в рецепте '''
 
     recipe = models.ForeignKey(
         Recipes,

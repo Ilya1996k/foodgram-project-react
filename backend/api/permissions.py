@@ -12,7 +12,7 @@ class AdminOrReadOnly(BasePermission):
                 ))
 
 
-class AuthorOrReadOnly(BasePermission):
+class AuthorAndAdminOrReadOnly(BasePermission):
     """Разрешение автору. Остальным только чтение."""
     def has_permission(self, request, view):
         return (request.method in SAFE_METHODS

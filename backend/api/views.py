@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.db.models import Sum
-from django.http import FileResponse
+from django.http.response import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters import rest_framework as filters
 from djoser.views import UserViewSet as DjoserUserViewSet
@@ -13,7 +13,7 @@ from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
 from api.filters import IngredientsFilter, RecipesFilter
 from api.paginators import LimitPagination
-from api.permissions import AdminOrReadOnly, AuthorOrReadOnly
+from api.permissions import AdminOrReadOnly, AuthorAndAdminOrReadOnly
 from api.serializers import (IngredientSerializer, RecipeCreateSerializer,
                              RecipeReadSerializer, RecipeShortSerializer,
                              SubscribeSerializer, TagSerializer,
@@ -43,8 +43,9 @@ class IngredientViewSet(ReadOnlyModelViewSet):
 
 class UserViewSet(DjoserUserViewSet):
     """Класс для пользователей."""
-    queryset = Users.objects.all()
+    permission_classes = (AdminOrReadOnly,)
     pagination_class = LimitPagination
+    queryset = Users.objects.all()
     serializer_class = UserSerializer
 
     @action(detail=False,
@@ -62,28 +63,47 @@ class UserViewSet(DjoserUserViewSet):
         return self.get_paginated_response(serializer.data)
         # return Response(serializer.data)
 
-    @action(detail=True, methods=['POST'], url_path='subscribe')
-    def subscribe_post(self, request):
-        Subscribers.objects.create(
-            user=request.user,
-            author=self.get_object()
-        )
-        return Response(status=HTTP_201_CREATED)
-
-    @action(detail=True, methods=['DELETE'], url_path='subscribe')
-    def subscribe_delete(self, request):
+    @action(detail=True, methods=['POST', 'DELETE'], url_path='subscribe')
+    def subscribe(self, request):
+        author = self.get_object()
+        if request.method == 'POST':
+            serializer = SubscribeSerializer(author,
+                                             data=request.data,
+                                             context={"request": request})
+            serializer.is_valid(raise_exception=True)
+            Subscribers.objects.create(
+                user=request.user,
+                author=author
+            )
+            return Response(serializer.data, status=HTTP_201_CREATED)
         subscription = Subscribers.objects.get(
             user=request.user,
-            author=self.get_object()
+            author=author
         )
         subscription.delete()
         return Response(status=HTTP_204_NO_CONTENT)
+    # @action(detail=True, methods=['POST'], url_path='subscribe')
+    # def subscribe_post(self, request):
+    #     Subscribers.objects.create(
+    #         user=request.user,
+    #         author=self.get_object()
+    #     )
+    #     return Response(status=HTTP_201_CREATED)
+
+    # @action(detail=True, methods=['DELETE'], url_path='subscribe')
+    # def subscribe_delete(self, request):
+    #     subscription = Subscribers.objects.get(
+    #         user=request.user,
+    #         author=self.get_object()
+    #     )
+    #     subscription.delete()
+    #     return Response(status=HTTP_204_NO_CONTENT)
 
 
 class RecipeViewSet(ModelViewSet):
     queryset = Recipes.objects.all()
     pagination_class = LimitPagination
-    permission_classes = (AuthorOrReadOnly, )
+    permission_classes = (AuthorAndAdminOrReadOnly, )
     filter_backends = (filters.DjangoFilterBackend, )
     filterset_class = RecipesFilter
 
@@ -95,17 +115,16 @@ class RecipeViewSet(ModelViewSet):
     @action(detail=True, methods=['DELETE', 'POST'])
     def shopping_cart(self, request, pk):
         queryset = Carts.objects.filter(user=request.user, recipe__id=pk)
+        recipe = get_object_or_404(Recipes, id=pk)
         if request.method == 'POST':
             if queryset.exists():
                 return Response({'errors': 'Рецепт уже добавлен!'},
                                 status=HTTP_400_BAD_REQUEST)
-            recipe = get_object_or_404(Recipes, id=pk)
             Carts.objects.create(user=request.user, recipe=recipe)
             serializer = RecipeShortSerializer(recipe)
             return Response(serializer.data, status=HTTP_201_CREATED)
 
         else:
-            recipe = get_object_or_404(Recipes, id=pk)
             in_cart = get_object_or_404(Carts,
                                         user=request.user,
                                         recipe=recipe
@@ -116,17 +135,16 @@ class RecipeViewSet(ModelViewSet):
     @action(detail=True, methods=['DELETE', 'POST'])
     def favorite(self, request, pk):
         queryset = Favourites.objects.filter(user=request.user, recipe__id=pk)
+        recipe = get_object_or_404(Recipes, id=pk)
         if request.method == 'POST':
             if queryset.exists():
                 return Response({'errors': 'Рецепт уже добавлен!'},
                                 status=HTTP_400_BAD_REQUEST)
-            recipe = get_object_or_404(Recipes, id=pk)
             Favourites.objects.create(user=request.user, recipe=recipe)
             serializer = RecipeShortSerializer(recipe)
             return Response(serializer.data, status=HTTP_201_CREATED)
 
         else:
-            recipe = get_object_or_404(Recipes, id=pk)
             in_favorites = get_object_or_404(Favourites,
                                              user=request.user,
                                              recipe=recipe)
@@ -145,12 +163,24 @@ class RecipeViewSet(ModelViewSet):
         ).annotate(
             sum=Sum('amount')
         )
-        with open('cart.txt', 'w') as file:
-            file.write('Список покупок \n')
-            for i, ingredient in enumerate(ingredients):
-                file.write(f'Ингредиент №{i+1}: ')
-                file.write(f'{ingredient["ingredient__name"]}  ')
-                file.write(f'{ingredient["sum"]}')
-                file.write(f'{ingredient["ingredient__measurement_unit"]}.\n')
-        print(open('cart.txt').read)
-        return FileResponse(open('cart.txt', 'rb'), as_attachment=True)
+        shopping_list = ['Список покупок \n']
+        for i, ingredient in enumerate(ingredients):
+            line = ''.join([f'Ингредиент №{i+1}: ',
+                            f'{ingredient["ingredient__name"]}  ',
+                            f'{ingredient["sum"]}',
+                            f'{ingredient["ingredient__measurement_unit"]}.\n'
+                            ])
+            shopping_list.append(line)
+        response = HttpResponse(
+            shopping_list, content_type="text.txt; charset=utf-8")
+        response["Content-Disposition"] = "attachment; filename='shopping.txt'"
+        return response
+        # with open('cart.txt', 'w') as file:
+        #     file.write('Список покупок \n')
+        #     for i, ingredient in enumerate(ingredients):
+        #         file.write(f'Ингредиент №{i+1}: ')
+        #         file.write(f'{ingredient["ingredient__name"]}  ')
+        #         file.write(f'{ingredient["sum"]}')
+        #         file.write(f'{ingredient["ingredient__measurement_unit"]}.\n')
+        # print(open('cart.txt').read)
+        # return FileResponse(open('cart.txt', 'rb'), as_attachment=True)

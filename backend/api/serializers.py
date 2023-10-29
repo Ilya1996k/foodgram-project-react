@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.db import transaction
+from django.shortcuts import get_object_or_404
 from django.db.models import F
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers, status
@@ -135,11 +136,14 @@ class RecipeReadSerializer(ModelSerializer):
 
     def get_ingredients(self, recipe):
         """Получить все ингредиенты для данного рецецпта."""
-        ingredients = CountIngredient.objects.filter(recipe=recipe)
+        ingredients = Ingredients.objects.filter(
+            ingredients_in_recipes__recipe=recipe
+        )
         return ingredients.values(
-            'amount',
-            name=F('ingredient__name'),
-            measurement_unit=F('ingredient__measurement_unit'),
+            "id",
+            "name",
+            "measurement_unit",
+            amount=F("ingredients_in_recipes__amount")
         )
 
     def get_is_favorited(self, recipe):
@@ -186,12 +190,14 @@ class RecipeCreateSerializer(ModelSerializer):
 
     def get_ingredients(self, recipe):
         """Получить все ингредиенты для данного рецецпта."""
-        ingredients = CountIngredient.objects.filter(recipe=recipe)
+        ingredients = Ingredients.objects.filter(
+            ingredients_in_recipes__recipe=recipe
+        )
         return ingredients.values(
-            'ingredient_id',
-            'ingredient__name',
-            'ingredient__measurement_unit',
-            'amount'
+            "id",
+            "name",
+            "measurement_unit",
+            amount=F("ingredients_in_recipes__amount")
         )
 
     def validate_tags(self, tags):
@@ -210,6 +216,10 @@ class RecipeCreateSerializer(ModelSerializer):
     def validate(self, data):
         """Валидация исходных данных."""
         ingredients = self.initial_data.get("ingredients")
+        if not ingredients:
+            raise ValidationError(
+                detail='Отсутствуют ингредиентв!'
+            )
         ingredients = self.validate_ingredients(ingredients)
 
         data.update(
@@ -222,20 +232,18 @@ class RecipeCreateSerializer(ModelSerializer):
     def validate_ingredients(self, ingredients):
         if len(ingredients) == 0:
             raise ValidationError(
-                detail='Дожен быть хотя бы один ингредиент!',
-                status=status.HTTP_400_BAD_REQUEST
+                detail='Дожен быть хотя бы один ингредиент!'
             )
         id_ingredients_list = [item['id'] for item in ingredients]
         if len(set(id_ingredients_list)) != len(id_ingredients_list):
             raise ValidationError(
-                detail='Ингредиенты не должны повторяться!',
-                status=status.HTTP_400_BAD_REQUEST
+                detail='Ингредиенты не должны повторяться!'
             )
-        if len(['*' for item in ingredients if int(item['amount']) <= 0]) > 0:
-            raise ValidationError(
-                detail='Должно быть хотя бы какое-то количество ингредиента!',
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        for item in ingredients:
+            if int(item['amount']) <= 0:
+                raise ValidationError(
+                    detail='Должен быть хотя бы 1 ингредиент!'
+                )
         return ingredients
 
     @transaction.atomic
@@ -250,10 +258,11 @@ class RecipeCreateSerializer(ModelSerializer):
         recipe.tags.set(tags)
         for ingredient in ingredients:
             ingredient_id = ingredient['id']
+            ing = get_object_or_404(Ingredients, pk=ingredient_id)
             amount = ingredient['amount']
             CountIngredient.objects.create(
                 recipe=recipe,
-                ingredient_id=ingredient_id,
+                ingredient=ing,
                 amount=amount
             )
         return recipe
@@ -269,10 +278,13 @@ class RecipeCreateSerializer(ModelSerializer):
             instance.tags.set(tags)
         if ingredients:
             instance.ingredients.clear()
-            for ingredient, amount in ingredients.values():
+            for ingredient in ingredients:
+                ingredient_id = ingredient['id']
+                get_object_or_404(Ingredients, pk=ingredient_id)
+                amount = ingredient['amount']
                 CountIngredient.objects.create(
                     recipe=instance,
-                    ingredient=ingredient,
+                    ingredient_id=ingredient_id,
                     amount=amount
                 )
         instance.save()
