@@ -49,7 +49,7 @@ class UserViewSet(DjoserUserViewSet):
     serializer_class = UserSerializer
 
     @action(detail=False,
-            methods=['GET'],
+            methods=["GET"],
             permission_classes=(IsAuthenticated, ))
     def subscriptions(self, request):
         """Cписок подписок."""
@@ -58,15 +58,15 @@ class UserViewSet(DjoserUserViewSet):
         )
         serializer = SubscribeSerializer(pages,
                                          many=True,
-                                         context={'request': request}
+                                         context={"request": request}
                                          )
         return self.get_paginated_response(serializer.data)
         # return Response(serializer.data)
 
-    @action(detail=True, methods=['POST', 'DELETE'], url_path='subscribe')
+    @action(detail=True, methods=["POST", "DELETE"], url_path="subscribe")
     def subscribe(self, request):
         author = self.get_object()
-        if request.method == 'POST':
+        if request.method == "POST":
             serializer = SubscribeSerializer(author,
                                              data=request.data,
                                              context={"request": request})
@@ -82,7 +82,7 @@ class UserViewSet(DjoserUserViewSet):
         )
         subscription.delete()
         return Response(status=HTTP_204_NO_CONTENT)
-    # @action(detail=True, methods=['POST'], url_path='subscribe')
+    # @action(detail=True, methods=["POST"], url_path="subscribe")
     # def subscribe_post(self, request):
     #     Subscribers.objects.create(
     #         user=request.user,
@@ -90,7 +90,7 @@ class UserViewSet(DjoserUserViewSet):
     #     )
     #     return Response(status=HTTP_201_CREATED)
 
-    # @action(detail=True, methods=['DELETE'], url_path='subscribe')
+    # @action(detail=True, methods=["DELETE"], url_path="subscribe")
     # def subscribe_delete(self, request):
     #     subscription = Subscribers.objects.get(
     #         user=request.user,
@@ -108,17 +108,17 @@ class RecipeViewSet(ModelViewSet):
     filterset_class = RecipesFilter
 
     def get_serializer_class(self):
-        if self.action in ['create', 'update', 'partial_update']:
+        if self.action in ["create", "update", "partial_update"]:
             return RecipeCreateSerializer
         return RecipeReadSerializer
 
-    @action(detail=True, methods=['DELETE', 'POST'])
+    @action(detail=True, methods=["DELETE", "POST"])
     def shopping_cart(self, request, pk):
         queryset = Carts.objects.filter(user=request.user, recipe__id=pk)
         recipe = get_object_or_404(Recipes, id=pk)
-        if request.method == 'POST':
+        if request.method == "POST":
             if queryset.exists():
-                return Response({'errors': 'Рецепт уже добавлен!'},
+                return Response({"errors": "Рецепт уже добавлен!"},
                                 status=HTTP_400_BAD_REQUEST)
             Carts.objects.create(user=request.user, recipe=recipe)
             serializer = RecipeShortSerializer(recipe)
@@ -132,13 +132,13 @@ class RecipeViewSet(ModelViewSet):
             in_cart.delete()
             return Response(status=HTTP_204_NO_CONTENT)
 
-    @action(detail=True, methods=['DELETE', 'POST'])
+    @action(detail=True, methods=["DELETE", "POST"])
     def favorite(self, request, pk):
         queryset = Favourites.objects.filter(user=request.user, recipe__id=pk)
         recipe = get_object_or_404(Recipes, id=pk)
-        if request.method == 'POST':
+        if request.method == "POST":
             if queryset.exists():
-                return Response({'errors': 'Рецепт уже добавлен!'},
+                return Response({"errors": "Рецепт уже добавлен!"},
                                 status=HTTP_400_BAD_REQUEST)
             Favourites.objects.create(user=request.user, recipe=recipe)
             serializer = RecipeShortSerializer(recipe)
@@ -152,23 +152,23 @@ class RecipeViewSet(ModelViewSet):
             return Response(status=HTTP_204_NO_CONTENT)
 
     @action(detail=False,
-            methods=['GET'],
+            methods=["GET"],
             permission_classes=(IsAuthenticated,))
     def download_shopping_cart(self, request):
         ingredients = CountIngredient.objects.filter(
             recipe__cart__user=request.user
         ).values(
-            'ingredient__name',
-            'ingredient__measurement_unit'
+            "ingredient__name",
+            "ingredient__measurement_unit"
         ).annotate(
-            sum=Sum('amount')
+            sum=Sum("amount")
         )
-        shopping_list = ['Список покупок \n']
+        shopping_list = ["Список покупок \n"]
         for i, ingredient in enumerate(ingredients):
-            line = ''.join([f'Ингредиент №{i+1}: ',
-                            f'{ingredient["ingredient__name"]}  ',
-                            f'{ingredient["sum"]}',
-                            f'{ingredient["ingredient__measurement_unit"]}.\n'
+            line = "".join([f"Ингредиент №{i+1}: ",
+                            f"{ingredient['ingredient__name']}  ",
+                            f"{ingredient['sum']}",
+                            f"{ingredient['ingredient__measurement_unit']}.\n"
                             ])
             shopping_list.append(line)
         response = HttpResponse(

@@ -70,15 +70,15 @@ class SubscribeSerializer(UserSerializer):
 
     def validate(self, data):
         author = self.instance
-        user = self.context.get('request').user
+        user = self.context.get("request").user
         if user == author:
             raise ValidationError(
-                detail='Нельзя подписаться на самого себя!',
+                detail="Нельзя подписаться на самого себя!",
                 code=status.HTTP_400_BAD_REQUEST
             )
         if Subscribers.objects.filter(author=author, user=user).exists():
             raise ValidationError(
-                detail='На этого пользователя Вы уже подписаны!',
+                detail="На этого пользователя Вы уже подписаны!",
                 code=status.HTTP_400_BAD_REQUEST
             )
         return data
@@ -102,7 +102,7 @@ class IngredientSerializer(ModelSerializer):
 
     class Meta:
         model = Ingredients
-        fields = '__all__'
+        fields = "__all__"
 
 
 class TagSerializer(ModelSerializer):
@@ -110,7 +110,7 @@ class TagSerializer(ModelSerializer):
 
     class Meta:
         model = Tags
-        fields = '__all__'
+        fields = "__all__"
 
 
 class RecipeReadSerializer(ModelSerializer):
@@ -125,13 +125,13 @@ class RecipeReadSerializer(ModelSerializer):
     class Meta:
         model = Recipes
         fields = (
-            'id',
-            'tags', 'ingredients',
-            'author',
-            'is_favorited',
-            'is_in_shopping_cart',
-            'image', 'text',
-            'name', 'cooking_time'
+            "id",
+            "tags", "ingredients",
+            "author",
+            "is_favorited",
+            "is_in_shopping_cart",
+            "image", "text",
+            "name", "cooking_time"
         )
 
     def get_ingredients(self, recipe):
@@ -168,7 +168,7 @@ class RecipeReadSerializer(ModelSerializer):
 class RecipeShortSerializer(ModelSerializer):
     class Meta:
         model = Recipes
-        fields = ('id', 'image', 'name', 'cooking_time')
+        fields = ("id", "image", "name", "cooking_time")
 
 
 class RecipeCreateSerializer(ModelSerializer):
@@ -183,9 +183,9 @@ class RecipeCreateSerializer(ModelSerializer):
     class Meta:
         model = Recipes
         fields = (
-            'tags', 'ingredients',
-            'image', 'text',
-            'name', 'cooking_time'
+            "tags", "ingredients",
+            "image", "text",
+            "name", "cooking_time"
         )
 
     def get_ingredients(self, recipe):
@@ -203,12 +203,12 @@ class RecipeCreateSerializer(ModelSerializer):
     def validate_tags(self, tags):
         if len(tags) == 0:
             raise ValidationError(
-                detail='Дожен быть хотя бы один тег!',
+                detail="Дожен быть хотя бы один тег!",
                 status=status.HTTP_400_BAD_REQUEST
             )
         if len(set(tags)) != len(tags):
             raise ValidationError(
-                detail='Все теги должны быть уникальными!',
+                detail="Все теги должны быть уникальными!",
                 status=status.HTTP_400_BAD_REQUEST
             )
         return tags
@@ -218,7 +218,7 @@ class RecipeCreateSerializer(ModelSerializer):
         ingredients = self.initial_data.get("ingredients")
         if not ingredients:
             raise ValidationError(
-                detail='Отсутствуют ингредиентв!'
+                detail="Отсутствуют ингредиентв!"
             )
         ingredients = self.validate_ingredients(ingredients)
 
@@ -232,34 +232,34 @@ class RecipeCreateSerializer(ModelSerializer):
     def validate_ingredients(self, ingredients):
         if len(ingredients) == 0:
             raise ValidationError(
-                detail='Дожен быть хотя бы один ингредиент!'
+                detail="Дожен быть хотя бы один ингредиент!"
             )
-        id_ingredients_list = [item['id'] for item in ingredients]
+        id_ingredients_list = [item["id"] for item in ingredients]
         if len(set(id_ingredients_list)) != len(id_ingredients_list):
             raise ValidationError(
-                detail='Ингредиенты не должны повторяться!'
+                detail="Ингредиенты не должны повторяться!"
             )
         for item in ingredients:
-            if int(item['amount']) <= 0:
+            if int(item["amount"]) <= 0:
                 raise ValidationError(
-                    detail='Должен быть хотя бы 1 ингредиент!'
+                    detail="Должен быть хотя бы 1 ингредиент!"
                 )
         return ingredients
 
     @transaction.atomic
     def create(self, validated_data):
         """Создание рецепта."""
-        tags = validated_data.pop('tags')
-        ingredients = validated_data.pop('ingredients')
+        tags = validated_data.pop("tags")
+        ingredients = validated_data.pop("ingredients")
         recipe = Recipes.objects.create(
-            author=self.context.get('request').user,
+            author=self.context.get("request").user,
             **validated_data
         )
         recipe.tags.set(tags)
         for ingredient in ingredients:
-            ingredient_id = ingredient['id']
+            ingredient_id = ingredient["id"]
             ing = get_object_or_404(Ingredients, pk=ingredient_id)
-            amount = ingredient['amount']
+            amount = ingredient["amount"]
             CountIngredient.objects.create(
                 recipe=recipe,
                 ingredient=ing,
@@ -270,8 +270,8 @@ class RecipeCreateSerializer(ModelSerializer):
     @transaction.atomic
     def update(self, instance, validated_data):
         """Обновление рецепта."""
-        tags = validated_data.pop('tags')
-        ingredients = validated_data.pop('ingredients')
+        tags = validated_data.pop("tags")
+        ingredients = validated_data.pop("ingredients")
         instance = super().update(instance, validated_data)
         if tags:
             instance.tags.clear()
@@ -279,9 +279,9 @@ class RecipeCreateSerializer(ModelSerializer):
         if ingredients:
             instance.ingredients.clear()
             for ingredient in ingredients:
-                ingredient_id = ingredient['id']
+                ingredient_id = ingredient["id"]
                 get_object_or_404(Ingredients, pk=ingredient_id)
-                amount = ingredient['amount']
+                amount = ingredient["amount"]
                 CountIngredient.objects.create(
                     recipe=instance,
                     ingredient_id=ingredient_id,

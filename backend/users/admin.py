@@ -23,6 +23,6 @@ class UserAdmin(UserAdmin):
 @admin.register(Subscribers)
 class SubscribeAdmin(admin.ModelAdmin):
     list_display = (
-        'user',
-        'author',
+        "user",
+        "author",
     )
