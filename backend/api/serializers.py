@@ -205,18 +205,17 @@ class RecipeCreateSerializer(RecipeReadSerializer):
                 detail="Все теги должны быть уникальными!"
             )
         return tags
-    
+
     def validate_cooking_time(self, cooking_time):
         if cooking_time < 1:
             raise ValidationError(
-                detail="little time"
+                detail="Время не менее 1 минуты!"
             )
         if cooking_time > 300:
             raise ValidationError(
-                detail="big time"
+                detail="Слишком долго!"
             )
         return cooking_time
-            
 
     def validate(self, data):
         """Валидация исходных данных."""

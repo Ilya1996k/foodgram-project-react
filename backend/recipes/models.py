@@ -1,5 +1,7 @@
 from django.contrib.auth import get_user_model
-from django.core.validators import RegexValidator, MinValueValidator, MaxValueValidator
+from django.core.validators import (RegexValidator,
+                                    MinValueValidator,
+                                    MaxValueValidator)
 from django.db import models
 
 User = get_user_model()
@@ -14,8 +16,8 @@ class Tags(models.Model):
         unique=True,
         validators=[
             RegexValidator(
-                regex=r'^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$',
-                message='Wrong format'
+                regex=r"^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$",
+                message="Неверный формат ввода!"
             )
         ]
     )
@@ -64,12 +66,10 @@ class Recipes(models.Model):
                               blank=True,
                               null=True,
                               upload_to="recipes/")
-    # image = models.ImageField("Картинка", upload_to="recipes/")
     text = models.TextField("Текстовое описание")
     ingredients = models.ManyToManyField(
         Ingredients,
         verbose_name="Ингредиенты",
-        # through="CountIngredient"
     )
     tags = models.ManyToManyField(
         Tags,
@@ -79,8 +79,8 @@ class Recipes(models.Model):
     cooking_time = models.PositiveSmallIntegerField(
         "Время приготовления",
         validators=[
-            MaxValueValidator(300, message='Too long'),
-            MinValueValidator(1, message='Too little')
+            MaxValueValidator(300, message="Слишком долго!"),
+            MinValueValidator(1, message="Время не менее 1 минуты!")
         ]
     )
     date = models.DateTimeField("Дата публикации", auto_now_add=True)

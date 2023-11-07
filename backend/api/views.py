@@ -83,22 +83,6 @@ class UserViewSet(DjoserUserViewSet):
         )
         subscription.delete()
         return Response(status=HTTP_204_NO_CONTENT)
-    # @action(detail=True, methods=["POST"], url_path="subscribe")
-    # def subscribe_post(self, request):
-    #     Subscribers.objects.create(
-    #         user=request.user,
-    #         author=self.get_object()
-    #     )
-    #     return Response(status=HTTP_201_CREATED)
-
-    # @action(detail=True, methods=["DELETE"], url_path="subscribe")
-    # def subscribe_delete(self, request):
-    #     subscription = Subscribers.objects.get(
-    #         user=request.user,
-    #         author=self.get_object()
-    #     )
-    #     subscription.delete()
-    #     return Response(status=HTTP_204_NO_CONTENT)
 
 
 class RecipeViewSet(ModelViewSet):
@@ -176,12 +160,3 @@ class RecipeViewSet(ModelViewSet):
             shopping_list, content_type="text.txt; charset=utf-8")
         response["Content-Disposition"] = "attachment; filename='shopping.txt'"
         return response
-        # with open('cart.txt', 'w') as file:
-        #     file.write('Список покупок \n')
-        #     for i, ingredient in enumerate(ingredients):
-        #         file.write(f'Ингредиент №{i+1}: ')
-        #         file.write(f'{ingredient["ingredient__name"]}  ')
-        #         file.write(f'{ingredient["sum"]}')
-        #         file.write(f'{ingredient["ingredient__measurement_unit"]}.\n')
-        # print(open('cart.txt').read)
-        # return FileResponse(open('cart.txt', 'rb'), as_attachment=True)
