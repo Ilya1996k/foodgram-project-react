@@ -171,7 +171,7 @@ class RecipeShortSerializer(ModelSerializer):
         fields = ("id", "image", "name", "cooking_time")
 
 
-class RecipeCreateSerializer(ModelSerializer):
+class RecipeCreateSerializer(RecipeReadSerializer):
     """Создание и обновление рецептов."""
     tags = serializers.PrimaryKeyRelatedField(
         many=True,
@@ -179,14 +179,9 @@ class RecipeCreateSerializer(ModelSerializer):
     )
     ingredients = SerializerMethodField()
     image = Base64ImageField()
-
-    class Meta:
-        model = Recipes
-        fields = (
-            "tags", "ingredients",
-            "image", "text",
-            "name", "cooking_time"
-        )
+    author = UserSerializer(read_only=True)
+    is_favorited = SerializerMethodField()
+    is_in_shopping_cart = SerializerMethodField()
 
     def get_ingredients(self, recipe):
         """Получить все ингредиенты для данного рецецпта."""
@@ -203,22 +198,32 @@ class RecipeCreateSerializer(ModelSerializer):
     def validate_tags(self, tags):
         if len(tags) == 0:
             raise ValidationError(
-                detail="Дожен быть хотя бы один тег!",
-                status=status.HTTP_400_BAD_REQUEST
+                detail="Дожен быть хотя бы один тег!"
             )
         if len(set(tags)) != len(tags):
             raise ValidationError(
-                detail="Все теги должны быть уникальными!",
-                status=status.HTTP_400_BAD_REQUEST
+                detail="Все теги должны быть уникальными!"
             )
         return tags
+    
+    def validate_cooking_time(self, cooking_time):
+        if cooking_time < 1:
+            raise ValidationError(
+                detail="little time"
+            )
+        if cooking_time > 300:
+            raise ValidationError(
+                detail="big time"
+            )
+        return cooking_time
+            
 
     def validate(self, data):
         """Валидация исходных данных."""
         ingredients = self.initial_data.get("ingredients")
         if not ingredients:
             raise ValidationError(
-                detail="Отсутствуют ингредиентв!"
+                detail="Отсутствуют ингредиенты!"
             )
         ingredients = self.validate_ingredients(ingredients)
 

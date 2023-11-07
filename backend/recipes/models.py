@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.core.validators import RegexValidator, MinValueValidator, MaxValueValidator
 from django.db import models
 
 User = get_user_model()
@@ -7,8 +8,18 @@ User = get_user_model()
 class Tags(models.Model):
     """Модель тегов."""
     name = models.CharField("Название", max_length=200)
-    color = models.CharField("Цвет", max_length=7)
-    slug = models.CharField("Слаг тега", max_length=200)
+    color = models.CharField(
+        "Цвет",
+        max_length=7,
+        unique=True,
+        validators=[
+            RegexValidator(
+                regex=r'^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$',
+                message='Wrong format'
+            )
+        ]
+    )
+    slug = models.CharField("Слаг тега", max_length=200, unique=True)
 
     class Meta:
         verbose_name = "Тег"
@@ -28,6 +39,12 @@ class Ingredients(models.Model):
         verbose_name = "Ингредиент"
         verbose_name_plural = "Ингредиенты"
         ordering = ("name",)
+        constraints = [
+            models.UniqueConstraint(
+                fields=('name', 'measurement_unit'),
+                name='Unique ingredient'
+            )
+        ]
 
     def __str__(self):
         return f"Название ингредиента: {self.name}"
@@ -59,7 +76,13 @@ class Recipes(models.Model):
         related_name="recipes",
         verbose_name="Теги"
     )
-    cooking_time = models.PositiveSmallIntegerField("Время приготовления")
+    cooking_time = models.PositiveSmallIntegerField(
+        "Время приготовления",
+        validators=[
+            MaxValueValidator(300, message='Too long'),
+            MinValueValidator(1, message='Too little')
+        ]
+    )
     date = models.DateTimeField("Дата публикации", auto_now_add=True)
 
     class Meta:
@@ -140,6 +163,12 @@ class CountIngredient(models.Model):
     class Meta:
         verbose_name = "Ингредиент в рецепте"
         verbose_name_plural = "Ингредиенты в рецептах"
+        constraints = [
+            models.UniqueConstraint(
+                fields=('recipe', 'ingredient'),
+                name='Unique ingredient in recipe'
+            )
+        ]
 
     def __str__(self):
         return f"{self.ingredient.name}: {self.amount}"

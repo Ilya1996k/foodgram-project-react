@@ -13,7 +13,7 @@ from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
 from api.filters import IngredientsFilter, RecipesFilter
 from api.paginators import LimitPagination
-from api.permissions import AdminOrReadOnly, AuthorAndAdminOrReadOnly
+from api.permissions import AdminOrReadOnly, AuthorOrAdminOrReadOnly
 from api.serializers import (IngredientSerializer, RecipeCreateSerializer,
                              RecipeReadSerializer, RecipeShortSerializer,
                              SubscribeSerializer, TagSerializer,
@@ -63,7 +63,8 @@ class UserViewSet(DjoserUserViewSet):
         return self.get_paginated_response(serializer.data)
         # return Response(serializer.data)
 
-    @action(detail=True, methods=["POST", "DELETE"], url_path="subscribe")
+    @action(detail=True, methods=["POST", "DELETE"],
+            url_path="subscribe", permission_classes=(IsAuthenticated, ))
     def subscribe(self, request):
         author = self.get_object()
         if request.method == "POST":
@@ -103,7 +104,7 @@ class UserViewSet(DjoserUserViewSet):
 class RecipeViewSet(ModelViewSet):
     queryset = Recipes.objects.all()
     pagination_class = LimitPagination
-    permission_classes = (AuthorAndAdminOrReadOnly, )
+    permission_classes = (AuthorOrAdminOrReadOnly, )
     filter_backends = (filters.DjangoFilterBackend, )
     filterset_class = RecipesFilter
 
