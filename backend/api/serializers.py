@@ -84,7 +84,7 @@ class SubscribeSerializer(UserSerializer):
         return data
 
     def get_recipes_count(self, obj):
-        """Количество рецептов каждго автора."""
+        """Количество рецептов каждого автора."""
         return obj.recipes.count()
 
     def get_is_subscribed(self, obj):
@@ -250,6 +250,27 @@ class RecipeCreateSerializer(RecipeReadSerializer):
                 )
         return ingredients
 
+    # @transaction.atomic
+    # def create(self, validated_data):
+    #     """Создание рецепта."""
+    #     tags = validated_data.pop("tags")
+    #     ingredients = validated_data.pop("ingredients")
+    #     recipe = Recipes.objects.create(
+    #         author=self.context.get("request").user,
+    #         **validated_data
+    #     )
+    #     recipe.tags.set(tags)
+    #     for ingredient in ingredients:
+    #         ingredient_id = ingredient["id"]
+    #         ing = get_object_or_404(Ingredients, pk=ingredient_id)
+    #         amount = ingredient["amount"]
+    #         CountIngredient.objects.create(
+    #             recipe=recipe,
+    #             ingredient=ing,
+    #             amount=amount
+    #         )
+    #     return recipe
+
     @transaction.atomic
     def create(self, validated_data):
         """Создание рецепта."""
@@ -260,16 +281,38 @@ class RecipeCreateSerializer(RecipeReadSerializer):
             **validated_data
         )
         recipe.tags.set(tags)
-        for ingredient in ingredients:
-            ingredient_id = ingredient["id"]
-            ing = get_object_or_404(Ingredients, pk=ingredient_id)
-            amount = ingredient["amount"]
-            CountIngredient.objects.create(
+        CountIngredient.objects.bulk_create(
+            [CountIngredient(
+                ingredient=Ingredients.objects.get(id=ingredient['id']),
                 recipe=recipe,
-                ingredient=ing,
-                amount=amount
-            )
+                amount=ingredient['amount']
+            ) for ingredient in ingredients]
+        )
+
         return recipe
+
+    # @transaction.atomic
+    # def update(self, instance, validated_data):
+    #     """Обновление рецепта."""
+    #     tags = validated_data.pop("tags")
+    #     ingredients = validated_data.pop("ingredients")
+    #     instance = super().update(instance, validated_data)
+    #     if tags:
+    #         instance.tags.clear()
+    #         instance.tags.set(tags)
+    #     if ingredients:
+    #         instance.ingredients.clear()
+    #         for ingredient in ingredients:
+    #             ingredient_id = ingredient["id"]
+    #             get_object_or_404(Ingredients, pk=ingredient_id)
+    #             amount = ingredient["amount"]
+    #             CountIngredient.objects.create(
+    #                 recipe=instance,
+    #                 ingredient_id=ingredient_id,
+    #                 amount=amount
+    #             )
+    #     instance.save()
+    #     return instance
 
     @transaction.atomic
     def update(self, instance, validated_data):
@@ -282,14 +325,12 @@ class RecipeCreateSerializer(RecipeReadSerializer):
             instance.tags.set(tags)
         if ingredients:
             instance.ingredients.clear()
-            for ingredient in ingredients:
-                ingredient_id = ingredient["id"]
-                get_object_or_404(Ingredients, pk=ingredient_id)
-                amount = ingredient["amount"]
-                CountIngredient.objects.create(
+            CountIngredient.objects.bulk_create(
+                [CountIngredient(
+                    ingredient=Ingredients.objects.get(id=ingredient['id']),
                     recipe=instance,
-                    ingredient_id=ingredient_id,
-                    amount=amount
-                )
+                    amount=ingredient['amount']
+                ) for ingredient in ingredients]
+            )
         instance.save()
         return instance
