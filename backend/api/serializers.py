@@ -2,11 +2,14 @@ from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.db.models import F
+from rest_framework.response import Response
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers, status
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import SerializerMethodField
 from rest_framework.serializers import ModelSerializer
+from rest_framework.status import (HTTP_404_NOT_FOUND)
+from django.http.response import HttpResponse
 
 from recipes.models import CountIngredient, Ingredients, Recipes, Tags
 from users.models import Subscribers
@@ -52,7 +55,8 @@ class RecipeInfoSerializer(ModelSerializer):
 class SubscribeSerializer(UserSerializer):
     """Вывод подписок пользователя."""
     recipes_count = SerializerMethodField()
-    recipes = RecipeInfoSerializer(many=True, read_only=True)
+    # recipes = RecipeInfoSerializer(many=True, read_only=True)
+    recipes = SerializerMethodField()
 
     class Meta:
         model = User
@@ -66,7 +70,6 @@ class SubscribeSerializer(UserSerializer):
             "recipes",
             "is_subscribed",
         )
-        read_only_fields = ("__all__",)
 
     def validate(self, data):
         author = self.instance
@@ -86,6 +89,17 @@ class SubscribeSerializer(UserSerializer):
     def get_recipes_count(self, obj):
         """Количество рецептов каждого автора."""
         return obj.recipes.count()
+    
+    def get_recipes(self, obj):
+        params = self.context.get("request").query_params
+        limit = params.get("recipes_limit")
+        recipes = obj.recipes.all()
+        if limit:
+            recipes = recipes[:int(limit)]
+
+        serializer = RecipeInfoSerializer(recipes, many=True)
+        return serializer.data
+
 
     def get_is_subscribed(self, obj):
         """Проверка подписки пользователей."""
@@ -250,27 +264,6 @@ class RecipeCreateSerializer(RecipeReadSerializer):
                 )
         return ingredients
 
-    # @transaction.atomic
-    # def create(self, validated_data):
-    #     """Создание рецепта."""
-    #     tags = validated_data.pop("tags")
-    #     ingredients = validated_data.pop("ingredients")
-    #     recipe = Recipes.objects.create(
-    #         author=self.context.get("request").user,
-    #         **validated_data
-    #     )
-    #     recipe.tags.set(tags)
-    #     for ingredient in ingredients:
-    #         ingredient_id = ingredient["id"]
-    #         ing = get_object_or_404(Ingredients, pk=ingredient_id)
-    #         amount = ingredient["amount"]
-    #         CountIngredient.objects.create(
-    #             recipe=recipe,
-    #             ingredient=ing,
-    #             amount=amount
-    #         )
-    #     return recipe
-
     @transaction.atomic
     def create(self, validated_data):
         """Создание рецепта."""
@@ -281,9 +274,10 @@ class RecipeCreateSerializer(RecipeReadSerializer):
             **validated_data
         )
         recipe.tags.set(tags)
+                
         CountIngredient.objects.bulk_create(
             [CountIngredient(
-                ingredient=Ingredients.objects.get(id=ingredient['id']),
+                ingredient=get_object_or_404(Ingredients, pk=ingredient["id"], ),
                 recipe=recipe,
                 amount=ingredient['amount']
             ) for ingredient in ingredients]
@@ -320,17 +314,20 @@ class RecipeCreateSerializer(RecipeReadSerializer):
         tags = validated_data.pop("tags")
         ingredients = validated_data.pop("ingredients")
         instance = super().update(instance, validated_data)
-        if tags:
-            instance.tags.clear()
-            instance.tags.set(tags)
-        if ingredients:
-            instance.ingredients.clear()
-            CountIngredient.objects.bulk_create(
-                [CountIngredient(
-                    ingredient=Ingredients.objects.get(id=ingredient['id']),
-                    recipe=instance,
-                    amount=ingredient['amount']
-                ) for ingredient in ingredients]
-            )
+        for key, value in validated_data.items():
+            if hasattr(instance, key):
+                setattr(instance, key, value)
+        
+        instance.tags.clear()
+        instance.tags.set(tags)
+        
+        CountIngredient.objects.filter(recipe=instance).delete()
+        CountIngredient.objects.bulk_create(
+            [CountIngredient(
+                ingredient=Ingredients.objects.get(id=ingredient['id']),
+                recipe=instance,
+                amount=ingredient['amount']
+            ) for ingredient in ingredients]
+        )
         instance.save()
         return instance

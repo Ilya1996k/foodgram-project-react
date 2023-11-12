@@ -11,19 +11,20 @@ ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "127.0.0.1 localhost").split()
 
 
 INSTALLED_APPS = [
-    "api",
-    "recipes",
-    "users",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django_filters",
     "rest_framework",
     "rest_framework.authtoken",
     "djoser",
-    "django_filters",
+
+    "api",
+    "recipes",
+    "users",
 ]
 
 MIDDLEWARE = [
@@ -131,16 +132,15 @@ REST_FRAMEWORK = {
 
 DJOSER = {
     "LOGIN_FIELD": "email",
+    "HIDE_USERS": False,
+
+    'PERMISSIONS': {
+        'user': ['rest_framework.permissions.AllowAny'],
+        'user_list': ['rest_framework.permissions.AllowAny'],
+    },
     "SERIALIZERS": {
         "user": "api.serializers.UserSerializer",
+        "user_list": "api.serializers.UserSerializer",
         "current_user": "api.serializers.UserSerializer",
     },
-
-    "PERMISSIONS": {
-        "user": ["djoser.permissions.CurrentUserOrAdminOrReadOnly"],
-        "user_list": ["rest_framework.permissions.IsAuthenticatedOrReadOnly"],
-        "current_user": ["rest_framework.permissions.IsAuthenticated"]
-    },
-
-    "HIDE_USERS": False,
 }

@@ -5,7 +5,7 @@ from django.shortcuts import get_object_or_404
 from django_filters import rest_framework as filters
 from djoser.views import UserViewSet as DjoserUserViewSet
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, DjangoModelPermissions
 from rest_framework.response import Response
 from rest_framework.status import (HTTP_201_CREATED, HTTP_204_NO_CONTENT,
                                    HTTP_400_BAD_REQUEST)
@@ -43,7 +43,7 @@ class IngredientViewSet(ReadOnlyModelViewSet):
 
 class UserViewSet(DjoserUserViewSet):
     """Класс для пользователей."""
-    permission_classes = (AdminOrReadOnly,)
+    permission_classes = (DjangoModelPermissions,)
     pagination_class = LimitPagination
     queryset = Users.objects.all()
     serializer_class = UserSerializer
@@ -65,13 +65,11 @@ class UserViewSet(DjoserUserViewSet):
 
     @action(detail=True, methods=["POST", "DELETE"],
             url_path="subscribe", permission_classes=(IsAuthenticated, ))
-    def subscribe(self, request):
+    def subscribe(self, request, id):
         author = self.get_object()
         if request.method == "POST":
             serializer = SubscribeSerializer(author,
-                                             data=request.data,
                                              context={"request": request})
-            serializer.is_valid(raise_exception=True)
             Subscribers.objects.create(
                 user=request.user,
                 author=author
