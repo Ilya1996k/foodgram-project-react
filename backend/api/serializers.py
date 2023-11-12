@@ -2,14 +2,11 @@ from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.db.models import F
-from rest_framework.response import Response
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers, status
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import SerializerMethodField
 from rest_framework.serializers import ModelSerializer
-from rest_framework.status import (HTTP_404_NOT_FOUND)
-from django.http.response import HttpResponse
 
 from recipes.models import CountIngredient, Ingredients, Recipes, Tags
 from users.models import Subscribers
@@ -89,7 +86,7 @@ class SubscribeSerializer(UserSerializer):
     def get_recipes_count(self, obj):
         """Количество рецептов каждого автора."""
         return obj.recipes.count()
-    
+
     def get_recipes(self, obj):
         params = self.context.get("request").query_params
         limit = params.get("recipes_limit")
@@ -99,7 +96,6 @@ class SubscribeSerializer(UserSerializer):
 
         serializer = RecipeInfoSerializer(recipes, many=True)
         return serializer.data
-
 
     def get_is_subscribed(self, obj):
         """Проверка подписки пользователей."""
@@ -274,39 +270,16 @@ class RecipeCreateSerializer(RecipeReadSerializer):
             **validated_data
         )
         recipe.tags.set(tags)
-                
+
         CountIngredient.objects.bulk_create(
             [CountIngredient(
-                ingredient=get_object_or_404(Ingredients, pk=ingredient["id"], ),
+                ingredient=get_object_or_404(Ingredients, pk=ingredient["id"]),
                 recipe=recipe,
                 amount=ingredient['amount']
             ) for ingredient in ingredients]
         )
 
         return recipe
-
-    # @transaction.atomic
-    # def update(self, instance, validated_data):
-    #     """Обновление рецепта."""
-    #     tags = validated_data.pop("tags")
-    #     ingredients = validated_data.pop("ingredients")
-    #     instance = super().update(instance, validated_data)
-    #     if tags:
-    #         instance.tags.clear()
-    #         instance.tags.set(tags)
-    #     if ingredients:
-    #         instance.ingredients.clear()
-    #         for ingredient in ingredients:
-    #             ingredient_id = ingredient["id"]
-    #             get_object_or_404(Ingredients, pk=ingredient_id)
-    #             amount = ingredient["amount"]
-    #             CountIngredient.objects.create(
-    #                 recipe=instance,
-    #                 ingredient_id=ingredient_id,
-    #                 amount=amount
-    #             )
-    #     instance.save()
-    #     return instance
 
     @transaction.atomic
     def update(self, instance, validated_data):
@@ -317,10 +290,10 @@ class RecipeCreateSerializer(RecipeReadSerializer):
         for key, value in validated_data.items():
             if hasattr(instance, key):
                 setattr(instance, key, value)
-        
+
         instance.tags.clear()
         instance.tags.set(tags)
-        
+
         CountIngredient.objects.filter(recipe=instance).delete()
         CountIngredient.objects.bulk_create(
             [CountIngredient(
