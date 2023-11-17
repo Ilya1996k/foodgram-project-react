@@ -63,8 +63,6 @@ class Recipes(models.Model):
     )
     name = models.CharField("Название", max_length=200)
     image = models.ImageField("Картинка",
-                              blank=True,
-                              null=True,
                               upload_to="recipes/")
     text = models.TextField("Текстовое описание")
     ingredients = models.ManyToManyField(
@@ -91,7 +89,8 @@ class Recipes(models.Model):
         ordering = ("-date",)
 
     def __str__(self):
-        return f"Название: {self.name}\n Автор: {self.author.username}"
+        # return f"Название: {self.name}\n Автор: {self.author.username}"
+        return f"Название: {self.name}"
 
 
 class Carts(models.Model):
@@ -141,6 +140,7 @@ class Favourites(models.Model):
 
     def __str__(self):
         return (f"{self.recipe.name} --> {self.user.username}")
+        # return (f"{self.recipe.name}")
 
 
 class CountIngredient(models.Model):

@@ -120,27 +120,51 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-REST_FRAMEWORK = {
-    "DEFAULT_PERMISSION_CLASSES": [
-        "rest_framework.permissions.AllowAny",
-    ],
+# REST_FRAMEWORK = {
+#     "DEFAULT_PERMISSION_CLASSES": [
+#         "rest_framework.permissions.AllowAny",
+#     ],
 
+#     "DEFAULT_AUTHENTICATION_CLASSES": [
+#         "rest_framework.authentication.TokenAuthentication",
+#     ],
+# }
+
+REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework.authentication.TokenAuthentication",
     ],
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticatedOrReadOnly",
+    ],
 }
+
+
+# DJOSER = {
+#     "LOGIN_FIELD": "email",
+#     "HIDE_USERS": False,
+
+#     'PERMISSIONS': {
+#         'user': ['rest_framework.permissions.AllowAny'],
+#         'user_list': ['rest_framework.permissions.AllowAny'],
+#     },
+#     "SERIALIZERS": {
+#         "user": "api.serializers.UserSerializer",
+#         "user_list": "api.serializers.UserSerializer",
+#         "current_user": "api.serializers.UserSerializer",
+#     },
+# }
 
 DJOSER = {
     "LOGIN_FIELD": "email",
-    "HIDE_USERS": False,
-
-    'PERMISSIONS': {
-        'user': ['rest_framework.permissions.AllowAny'],
-        'user_list': ['rest_framework.permissions.AllowAny'],
-    },
     "SERIALIZERS": {
         "user": "api.serializers.UserSerializer",
-        "user_list": "api.serializers.UserSerializer",
         "current_user": "api.serializers.UserSerializer",
     },
+    "PERMISSIONS": {
+        "user": ["djoser.permissions.CurrentUserOrAdminOrReadOnly"],
+        "user_list": ["rest_framework.permissions.IsAuthenticatedOrReadOnly"],
+        "current_user": ["rest_framework.permissions.IsAuthenticated"]
+    },
+    "HIDE_USERS": False,
 }
