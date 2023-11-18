@@ -61,7 +61,6 @@ class UserViewSet(DjoserUserViewSet):
                                          context={"request": request}
                                          )
         return self.get_paginated_response(serializer.data)
-        # return Response(serializer.data)
 
     @action(detail=True, methods=["POST", "DELETE"],
             url_path="subscribe", permission_classes=(IsAuthenticated, ))
