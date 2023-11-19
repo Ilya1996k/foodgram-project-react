@@ -130,6 +130,7 @@ class RecipeReadSerializer(ModelSerializer):
     ingredients = SerializerMethodField()
     is_favorited = SerializerMethodField()
     is_in_shopping_cart = SerializerMethodField()
+    image = SerializerMethodField()
     # image = Base64ImageField()
 
     class Meta:
@@ -143,6 +144,11 @@ class RecipeReadSerializer(ModelSerializer):
             "image", "text",
             "name", "cooking_time"
         )
+
+    def get_image(self, recipe):
+        if recipe.image:
+            return recipe.image.url
+        return None
 
     def get_ingredients(self, recipe):
         """Получить все ингредиенты для данного рецецпта."""
@@ -176,6 +182,8 @@ class RecipeReadSerializer(ModelSerializer):
 
 
 class RecipeShortSerializer(ModelSerializer):
+    image = Base64ImageField()
+
     class Meta:
         model = Recipes
         fields = ("id", "image", "name", "cooking_time")
@@ -245,6 +253,7 @@ class RecipeCreateSerializer(RecipeReadSerializer):
         """Валидация исходных данных."""
         ingredients = self.initial_data.get("ingredients")
         tags = self.initial_data.get("tags")
+        image = self.initial_data.get("image")
         if not ingredients:
             raise ValidationError(
                 detail="Отсутствуют ингредиенты!"
@@ -252,6 +261,10 @@ class RecipeCreateSerializer(RecipeReadSerializer):
         if not tags:
             raise ValidationError(
                 detail="Отсутствуют tags!"
+            )
+        if not image:
+            raise ValidationError(
+                detail="Отсутствуют image!"
             )
         ingredients = self.validate_ingredients(ingredients)
         tags = self.validate_tags(tags)
