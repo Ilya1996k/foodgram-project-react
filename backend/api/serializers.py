@@ -189,7 +189,7 @@ class RecipeCreateSerializer(RecipeReadSerializer):
     # )
     tags = TagSerializer(many=True, read_only=True)
     ingredients = SerializerMethodField()
-    image = Base64ImageField(required=True)
+    image = Base64ImageField()
     author = UserSerializer(read_only=True)
     is_favorited = SerializerMethodField()
     is_in_shopping_cart = SerializerMethodField()
