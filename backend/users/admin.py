@@ -18,6 +18,10 @@ class UserAdmin(UserAdmin):
         "first_name",
         "email",
     )
+    search_fields = (
+        "first_name",
+        "email",
+    )
 
 
 @admin.register(Subscribers)

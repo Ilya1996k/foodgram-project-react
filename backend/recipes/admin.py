@@ -13,13 +13,14 @@ class TagAdmin(admin.ModelAdmin):
 @admin.register(Ingredients)
 class IngredientAdmin(admin.ModelAdmin):
     list_display = ("name", "measurement_unit",)
-    list_filter = ("name",)
+    search_fields = ("name",)
 
 
 @admin.register(Recipes)
 class RecipeAdmin(admin.ModelAdmin):
     list_display = ("author", "name", "count_favorites")
-    list_filter = ("author", "name", "tags",)
+    list_filter = ("author", "tags")
+    search_fields = ("name",)
 
     @display(description="Количество в избранных")
     def count_favorites(self, obj):
