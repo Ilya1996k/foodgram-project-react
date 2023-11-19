@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.db.models import F
-# from drf_extra_fields.fields import Base64ImageField
+from drf_extra_fields.fields import Base64ImageField
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import SerializerMethodField
@@ -189,10 +189,22 @@ class RecipeCreateSerializer(RecipeReadSerializer):
     # )
     tags = TagSerializer(many=True, read_only=True)
     ingredients = SerializerMethodField()
-    # image = Base64ImageField()
+    image = Base64ImageField()
     author = UserSerializer(read_only=True)
     is_favorited = SerializerMethodField()
     is_in_shopping_cart = SerializerMethodField()
+
+    class Meta:
+        model = Recipes
+        fields = (
+            "id",
+            "tags", "ingredients",
+            "author",
+            "is_favorited",
+            "is_in_shopping_cart",
+            "image", "text",
+            "name", "cooking_time"
+        )
 
     def get_ingredients(self, recipe):
         """Получить все ингредиенты для данного рецецпта."""
