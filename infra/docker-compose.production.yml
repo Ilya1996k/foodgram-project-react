@@ -28,7 +28,6 @@ services:
     volumes:
       - ./frontend/:/app/result_build/
 
-
   nginx:
     container_name: gateway
     image: nginx:1.19.3
